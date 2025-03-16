@@ -1,5 +1,6 @@
 package com.meekdev.maudio;
 
+import com.meekdev.maudio.api.SoundLookup;
 import com.meekdev.maudio.api.effects.AudioEffect;
 import com.meekdev.maudio.api.effects.AudioSequence;
 import com.meekdev.maudio.api.events.AudioEvent;
@@ -88,6 +89,36 @@ public class MaudioAPI implements Maudio {
     @Override
     public ZoneInstance createSoundZone(Location center, double radius, String customSound, SoundCategory category, float volume, float pitch, int intervalTicks) {
         return manager.createSoundZone(center, radius, customSound, category, volume, pitch, intervalTicks);
+    }
+
+    @Override
+    public void playSound(Location location, SoundLookup soundLookup) {
+        manager.playSound(location, soundLookup);
+    }
+
+    @Override
+    public void playSoundToPlayer(Player player, SoundLookup soundLookup) {
+        manager.playSoundToPlayer(player, soundLookup);
+    }
+
+    @Override
+    public SoundInstance playMusic(Player player, SoundLookup soundLookup) {
+        return null;
+    }
+
+    @Override
+    public SoundInstance playLoopingSound(Location location, SoundLookup soundLookup) {
+        return null;
+    }
+
+    @Override
+    public SoundInstance playLoopingSound(Player player, SoundLookup soundLookup) {
+        return null;
+    }
+
+    @Override
+    public ZoneInstance createSoundZone(Location center, double radius, SoundLookup soundLookup) {
+        return null;
     }
 
     @Override
