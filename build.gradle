@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'maven-publish'
+    id 'signing'
 }
 
 group = 'com.meekdev'
@@ -7,6 +9,7 @@ version = '1.0'
 
 repositories {
     mavenCentral()
+    maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
@@ -18,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly 'org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT'
 }
 
 def targetJavaVersion = 21
@@ -29,6 +32,10 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
+
+    // Generate sources and javadoc JARs
+    withSourcesJar()
+    withJavadocJar()
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -46,4 +53,16 @@ processResources {
     filesMatching('paper-plugin.yml') {
         expand props
     }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
