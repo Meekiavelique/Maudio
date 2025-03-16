@@ -1,16 +1,17 @@
-package com.meekdev.maudio.impl;
+package com.meekdev.maudio.internal.model;
 
 import com.meekdev.maudio.SoundInstance;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
 import java.util.UUID;
 
-class SoundInstanceImpl implements SoundInstance {
-    enum State {
+public class SoundInstanceImpl implements SoundInstance {
+    public enum State {
         CREATED,
         PLAYING,
         PAUSED,
@@ -20,31 +21,38 @@ class SoundInstanceImpl implements SoundInstance {
         FADING_OUT
     }
 
-    private final UUID id;
-    private final Sound sound;
-    private final String customSound;
-    private final SoundCategory category;
+    private UUID id;
+    private Sound sound;
+    private String customSound;
+    private SoundCategory category;
     private float volume;
     private float pitch;
     private Player player;
     private Location location;
-    private final boolean looping;
+    private boolean looping;
     private int intervalTicks;
     private long lastPlayTime;
     private int currentTick;
     private State state = State.CREATED;
+    private UUID worldId;
 
     private float targetVolume;
     private float startVolume;
     private float fadeTime;
     private long fadeStartTime;
 
-    SoundInstanceImpl(UUID id, Sound sound, String customSound, SoundCategory category,
-                      float volume, float pitch, Player player) {
+    public SoundInstanceImpl(UUID id, Sound sound, String customSound, SoundCategory category,
+                             float volume, float pitch, Player player) {
         this(id, sound, customSound, category, volume, pitch, player, null, false, 0);
     }
 
-    SoundInstanceImpl(UUID id, Sound sound, String customSound, SoundCategory category,
+    public SoundInstanceImpl(UUID id, Sound sound, String customSound, SoundCategory category,
+                             float volume, float pitch, Player player, Location location,
+                             boolean looping, int intervalTicks) {
+        reset(id, sound, customSound, category, volume, pitch, player, location, looping, intervalTicks);
+    }
+
+    public void reset(UUID id, Sound sound, String customSound, SoundCategory category,
                       float volume, float pitch, Player player, Location location,
                       boolean looping, int intervalTicks) {
         this.id = id;
@@ -59,6 +67,16 @@ class SoundInstanceImpl implements SoundInstance {
         this.looping = looping;
         this.intervalTicks = Math.max(1, intervalTicks);
         this.lastPlayTime = System.currentTimeMillis();
+        this.currentTick = 0;
+        this.state = State.CREATED;
+
+        if (location != null && location.getWorld() != null) {
+            this.worldId = location.getWorld().getUID();
+        } else if (player != null && player.getWorld() != null) {
+            this.worldId = player.getWorld().getUID();
+        } else {
+            this.worldId = null;
+        }
     }
 
     @Override
@@ -132,6 +150,9 @@ class SoundInstanceImpl implements SoundInstance {
     @Override
     public SoundInstance setLocation(Location location) {
         this.location = location;
+        if (location != null && location.getWorld() != null) {
+            this.worldId = location.getWorld().getUID();
+        }
         return this;
     }
 
@@ -231,23 +252,23 @@ class SoundInstanceImpl implements SoundInstance {
         return Optional.ofNullable(location);
     }
 
-    void setState(State state) {
+    public void setState(State state) {
         this.state = state;
     }
 
-    State getState() {
+    public State getState() {
         return state;
     }
 
-    int getIntervalTicks() {
+    public int getIntervalTicks() {
         return intervalTicks;
     }
 
-    void setIntervalTicks(int intervalTicks) {
+    public void setIntervalTicks(int intervalTicks) {
         this.intervalTicks = Math.max(1, intervalTicks);
     }
 
-    void incrementTick() {
+    public void incrementTick() {
         if (!looping || state != State.PLAYING) return;
 
         currentTick++;
@@ -257,7 +278,7 @@ class SoundInstanceImpl implements SoundInstance {
         }
     }
 
-    float updateFading() {
+    public float updateFading() {
         if (state != State.FADING_IN && state != State.FADING_OUT) {
             return volume;
         }
@@ -279,5 +300,18 @@ class SoundInstanceImpl implements SoundInstance {
         }
 
         return volume;
+    }
+
+    public boolean isWorldSpecific() {
+        return worldId != null;
+    }
+
+    public UUID getWorldId() {
+        return worldId;
+    }
+
+    public boolean isInSameWorld(Player p) {
+        return p != null && p.getWorld() != null &&
+                worldId != null && p.getWorld().getUID().equals(worldId);
     }
 }
