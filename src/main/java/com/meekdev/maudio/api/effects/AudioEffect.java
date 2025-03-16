@@ -1,5 +1,6 @@
 package com.meekdev.maudio.api.effects;
 
+import com.meekdev.maudio.api.SoundLookup;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
@@ -11,19 +12,19 @@ import java.util.Set;
 import java.util.UUID;
 
 public class AudioEffect {
-    private final Sound sound;
-    private final String customSound;
-    private final SoundCategory category;
-    private final float volume;
-    private final float pitch;
+    private Sound sound;
+    private String customSound;
+    private SoundCategory category;
+    private float volume;
+    private float pitch;
     private final Set<UUID> targetPlayerIds;
     private final boolean global;
     private final Location location;
-    private final float fadeIn;
-    private final float fadeOut;
+    private float fadeIn;
+    private float fadeOut;
     private final float duration;
-    private final boolean looping;
-    private final int loopInterval;
+    private boolean looping;
+    private int loopInterval;
 
     private AudioEffect(Builder builder) {
         this.sound = builder.sound;
@@ -189,5 +190,23 @@ public class AudioEffect {
         public AudioEffect build() {
             return new AudioEffect(this);
         }
+    }
+
+    public AudioEffect soundLookup(SoundLookup lookup) {
+        if (lookup != null) {
+            this.sound = lookup.getSound();
+            this.customSound = null;
+            this.category = lookup.getCategory();
+            this.volume = lookup.getVolume();
+            this.pitch = lookup.getPitch();
+            this.fadeIn = lookup.getFadeIn();
+            this.fadeOut = lookup.getFadeOut();
+
+            if (lookup.isLooping()) {
+                this.looping = true;
+                this.loopInterval = lookup.getLoopInterval();
+            }
+        }
+        return this;
     }
 }
