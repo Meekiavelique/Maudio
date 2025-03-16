@@ -1,17 +1,19 @@
-package com.meekdev.maudio.impl;
+package com.meekdev.maudio.internal.model;
 
 import com.meekdev.maudio.ZoneInstance;
+import com.meekdev.maudio.internal.AudioManager;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-class ZoneInstanceImpl implements ZoneInstance {
+public class ZoneInstanceImpl implements ZoneInstance {
     private final UUID id;
     private final Location center;
     private double radius;
@@ -24,11 +26,11 @@ class ZoneInstanceImpl implements ZoneInstance {
     private boolean active;
     private final AudioManager manager;
     private int currentTick;
-    private final Set<UUID> playersInZone = new HashSet<>();
+    private final UUID worldId;
 
-    ZoneInstanceImpl(UUID id, Location center, double radius, Sound sound, String customSound,
-                     SoundCategory category, float volume, float pitch, int intervalTicks,
-                     AudioManager manager) {
+    public ZoneInstanceImpl(UUID id, Location center, double radius, Sound sound, String customSound,
+                            SoundCategory category, float volume, float pitch, int intervalTicks,
+                            AudioManager manager) {
         this.id = id;
         this.center = center.clone();
         this.radius = radius;
@@ -39,6 +41,7 @@ class ZoneInstanceImpl implements ZoneInstance {
         this.pitch = pitch;
         this.intervalTicks = Math.max(1, intervalTicks);
         this.manager = manager;
+        this.worldId = center.getWorld() != null ? center.getWorld().getUID() : null;
     }
 
     @Override
@@ -106,6 +109,7 @@ class ZoneInstanceImpl implements ZoneInstance {
     @Override
     public ZoneInstance setRadius(double radius) {
         this.radius = radius;
+        manager.getSpatialManager().updateZone(this);
         return this;
     }
 
@@ -124,74 +128,54 @@ class ZoneInstanceImpl implements ZoneInstance {
     @Override
     public ZoneInstance deactivate() {
         this.active = false;
-        playersInZone.clear();
         return this;
     }
 
     @Override
     public Set<Player> getPlayersInZone() {
-        Set<Player> players = new HashSet<>();
-
-        for (UUID playerId : playersInZone) {
-            Player player = manager.getPlugin().getServer().getPlayer(playerId);
-            if (player != null && player.isOnline()) {
-                players.add(player);
-            }
+        if (!active || worldId == null) {
+            return Set.of();
         }
 
-        return players;
+        World world = center.getWorld();
+        if (world == null) {
+            return Set.of();
+        }
+
+        double radiusSq = radius * radius;
+        return world.getPlayers().stream()
+                .filter(player -> player.getLocation().distanceSquared(center) <= radiusSq)
+                .collect(Collectors.toSet());
     }
 
     @Override
     public boolean isPlayerInZone(Player player) {
-        return player != null && playersInZone.contains(player.getUniqueId());
-    }
-
-    void updatePlayerPositions() {
-        if (!active || center.getWorld() == null) return;
-
-        playersInZone.clear();
-        double radiusSq = radius * radius;
-
-        for (Player player : center.getWorld().getPlayers()) {
-            if (player.getLocation().distanceSquared(center) <= radiusSq) {
-                playersInZone.add(player.getUniqueId());
-            }
+        if (!active || player == null || !player.isOnline() || worldId == null) {
+            return false;
         }
+
+        World playerWorld = player.getWorld();
+        if (playerWorld == null || !playerWorld.getUID().equals(worldId)) {
+            return false;
+        }
+
+        return player.getLocation().distanceSquared(center) <= (radius * radius);
     }
 
-    void incrementTick() {
+    public void incrementTick() {
         if (!active) return;
 
         currentTick++;
         if (currentTick >= intervalTicks) {
             currentTick = 0;
-            playSound();
         }
     }
 
-    private void playSound() {
-        if (!active || center.getWorld() == null) return;
-
-        for (UUID playerId : playersInZone) {
-            Player player = manager.getPlugin().getServer().getPlayer(playerId);
-            if (player == null || !player.isOnline()) continue;
-
-            float distance = (float) player.getLocation().distance(center);
-            float adjustedVolume = calculateVolumeByDistance(distance);
-
-            if (sound != null) {
-                player.playSound(player.getLocation(), sound, category, adjustedVolume, pitch);
-            } else if (customSound != null) {
-                player.playSound(player.getLocation(), customSound, category, adjustedVolume, pitch);
-            }
-        }
+    public boolean shouldPlayThisTick() {
+        return active && currentTick == 0;
     }
 
-    private float calculateVolumeByDistance(float distance) {
-        if (distance >= radius) return 0;
-
-        float volumeFactor = 1.0f - (distance / (float) radius);
-        return volume * volumeFactor * volumeFactor;
+    public UUID getWorldId() {
+        return worldId;
     }
 }
