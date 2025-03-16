@@ -1,47 +1,43 @@
 package com.meekdev.maudio;
 
-import com.meekdev.maudio.impl.AudioManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Main entry point for the MaudioLib library
- */
 public final class MaudioLib {
-    private static volatile MaudioAPI instance;
+    private static final AtomicReference<MaudioAPI> instance = new AtomicReference<>(null);
 
     private MaudioLib() {}
 
-    /**
-     * Initialize the Maudio library with the given plugin
-     */
     public static MaudioAPI init(JavaPlugin plugin) {
-        if (instance == null) {
-            synchronized (MaudioLib.class) {
-                if (instance == null) {
-                    instance = new MaudioAPI(plugin);
-                }
-            }
+        MaudioAPI existing = instance.get();
+        if (existing != null) {
+            return existing;
         }
-        return instance;
+
+        MaudioAPI newInstance = new MaudioAPI(plugin);
+        if (instance.compareAndSet(null, newInstance)) {
+            return newInstance;
+        } else {
+            return instance.get();
+        }
     }
 
-    /**
-     * Get the MaudioAPI instance
-     */
     public static MaudioAPI getInstance() {
-        if (instance == null) {
+        MaudioAPI api = instance.get();
+        if (api == null) {
             throw new IllegalStateException("MaudioLib has not been initialized. Call init() first.");
         }
-        return instance;
+        return api;
     }
 
-    /**
-     * Shutdown the Maudio library and clean up resources
-     */
+    public static boolean isInitialized() {
+        return instance.get() != null;
+    }
+
     public static void shutdown() {
-        if (instance != null) {
-            instance.dispose();
-            instance = null;
+        MaudioAPI api = instance.getAndSet(null);
+        if (api != null) {
+            api.dispose();
         }
     }
 }
