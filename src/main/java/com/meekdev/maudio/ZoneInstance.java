@@ -9,9 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Represents a zone where sounds are played based on player proximity
- */
+
 public interface ZoneInstance {
     UUID getId();
 
