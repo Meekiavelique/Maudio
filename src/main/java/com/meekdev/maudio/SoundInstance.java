@@ -8,9 +8,7 @@ import org.bukkit.entity.Player;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Represents a playing or scheduled sound
- */
+
 public interface SoundInstance {
     UUID getId();
 
