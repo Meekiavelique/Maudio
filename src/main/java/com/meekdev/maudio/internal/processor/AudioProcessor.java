@@ -1,16 +1,23 @@
-package com.meekdev.maudio.impl;
+package com.meekdev.maudio.internal.processor;
 
+import com.meekdev.maudio.internal.AudioManager;
+import com.meekdev.maudio.internal.SpatialManager;
+import com.meekdev.maudio.internal.model.SoundInstanceImpl;
+import com.meekdev.maudio.internal.model.ZoneInstanceImpl;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-class AudioProcessor implements Runnable {
+public class AudioProcessor implements Runnable {
     private final AudioManager manager;
-    private final ThreadLocal<Boolean> isRunning = ThreadLocal.withInitial(() -> false);
+    private final AtomicBoolean isRunning = new AtomicBoolean(false);
+    private int spatialCleanupCounter = 0;
+    private static final int SPATIAL_CLEANUP_INTERVAL = 100;
 
-    AudioProcessor(AudioManager manager) {
+    public AudioProcessor(AudioManager manager) {
         this.manager = manager;
     }
 
@@ -22,6 +29,12 @@ class AudioProcessor implements Runnable {
         try {
             processSounds();
             processZones();
+
+            spatialCleanupCounter++;
+            if (spatialCleanupCounter >= SPATIAL_CLEANUP_INTERVAL) {
+                spatialCleanupCounter = 0;
+                manager.getSpatialManager().cleanup();
+            }
         } catch (Exception e) {
             manager.getPlugin().getLogger().severe("Error in audio processing: " + e.getMessage());
             e.printStackTrace();
@@ -91,13 +104,51 @@ class AudioProcessor implements Runnable {
     }
 
     private void processZones() {
+        SpatialManager spatialManager = manager.getSpatialManager();
         Set<ZoneInstanceImpl> zones = manager.getAllZones();
 
         for (ZoneInstanceImpl zone : zones) {
             if (!zone.isActive()) continue;
 
-            zone.updatePlayerPositions();
             zone.incrementTick();
+
+            if (!zone.shouldPlayThisTick()) {
+                continue;
+            }
+
+            for (Player player : manager.getPlugin().getServer().getOnlinePlayers()) {
+                if (player.getWorld().getUID().equals(zone.getWorldId())) {
+                    double distanceSq = spatialManager.getCachedDistanceSquared(player, zone);
+                    double radiusSq = zone.getRadius() * zone.getRadius();
+
+                    if (distanceSq <= radiusSq) {
+                        playZoneSound(player, zone, calculateDistanceVolume(zone, distanceSq, radiusSq));
+                    }
+                }
+            }
+        }
+    }
+
+    private float calculateDistanceVolume(ZoneInstanceImpl zone, double distanceSq, double radiusSq) {
+        float volumeFactor = 1.0f;
+
+        if (distanceSq > 0 && radiusSq > 0) {
+            volumeFactor = 1.0f - (float) Math.sqrt(distanceSq / radiusSq);
+            volumeFactor = volumeFactor * volumeFactor;
+        }
+
+        return zone.getVolume() * volumeFactor;
+    }
+
+    private void playZoneSound(Player player, ZoneInstanceImpl zone, float volume) {
+        float adjustedVolume = manager.calculatePlayerVolume(player, volume);
+
+        if (adjustedVolume < 0.01f) return;
+
+        if (zone.getSound() != null) {
+            player.playSound(player.getLocation(), zone.getSound(), zone.getCategory(), adjustedVolume, zone.getPitch());
+        } else if (zone.getCustomSound().isPresent()) {
+            player.playSound(player.getLocation(), zone.getCustomSound().get(), zone.getCategory(), adjustedVolume, zone.getPitch());
         }
     }
 }
