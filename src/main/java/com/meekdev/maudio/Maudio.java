@@ -3,6 +3,7 @@ package com.meekdev.maudio;
 import com.meekdev.maudio.api.effects.AudioEffect;
 import com.meekdev.maudio.api.effects.AudioSequence;
 import com.meekdev.maudio.api.events.AudioEvent;
+import com.meekdev.maudio.api.SoundLookup;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
@@ -39,6 +40,18 @@ public interface Maudio {
     ZoneInstance createSoundZone(Location center, double radius, Sound sound, SoundCategory category, float volume, float pitch, int intervalTicks);
 
     ZoneInstance createSoundZone(Location center, double radius, String customSound, SoundCategory category, float volume, float pitch, int intervalTicks);
+
+    void playSound(Location location, SoundLookup soundLookup);
+
+    void playSoundToPlayer(Player player, SoundLookup soundLookup);
+
+    SoundInstance playMusic(Player player, SoundLookup soundLookup);
+
+    SoundInstance playLoopingSound(Location location, SoundLookup soundLookup);
+
+    SoundInstance playLoopingSound(Player player, SoundLookup soundLookup);
+
+    ZoneInstance createSoundZone(Location center, double radius, SoundLookup soundLookup);
 
     void removeSoundZone(UUID zoneId);
 
