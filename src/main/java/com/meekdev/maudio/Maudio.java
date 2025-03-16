@@ -1,5 +1,8 @@
 package com.meekdev.maudio;
 
+import com.meekdev.maudio.api.effects.AudioEffect;
+import com.meekdev.maudio.api.effects.AudioSequence;
+import com.meekdev.maudio.api.events.AudioEvent;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
@@ -8,9 +11,6 @@ import org.bukkit.entity.Player;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Main API interface for audio operations
- */
 public interface Maudio {
     void playSound(Location location, Sound sound, SoundCategory category, float volume, float pitch);
 
@@ -57,6 +57,16 @@ public interface Maudio {
     Optional<SoundInstance> getSoundInstance(UUID soundId);
 
     Optional<ZoneInstance> getZoneInstance(UUID zoneId);
+
+    void registerEvents(Object listener);
+
+    void unregisterEvents(Object listener);
+
+    boolean triggerEvent(AudioEvent event);
+
+    void playEffect(AudioEffect effect);
+
+    void playSequence(AudioSequence sequence);
 
     void dispose();
 }
