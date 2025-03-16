@@ -1,5 +1,9 @@
 package com.meekdev.maudio;
 
+import com.meekdev.maudio.api.effects.AudioEffect;
+import com.meekdev.maudio.api.effects.AudioSequence;
+import com.meekdev.maudio.api.events.AudioEvent;
+import com.meekdev.maudio.internal.AudioManager;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
@@ -9,14 +13,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * API interface for audio operations - implements Maudio interface
- */
 public class MaudioAPI implements Maudio {
-    private final com.meekdev.maudio.impl.AudioManager manager;
+    private final AudioManager manager;
 
     public MaudioAPI(JavaPlugin plugin) {
-        this.manager = new com.meekdev.maudio.impl.AudioManager(plugin);
+        this.manager = new AudioManager(plugin);
     }
 
     @Override
@@ -132,6 +133,31 @@ public class MaudioAPI implements Maudio {
     @Override
     public Optional<ZoneInstance> getZoneInstance(UUID zoneId) {
         return manager.getZoneInstance(zoneId);
+    }
+
+    @Override
+    public void registerEvents(Object listener) {
+        manager.registerEvents(listener);
+    }
+
+    @Override
+    public void unregisterEvents(Object listener) {
+        manager.unregisterEvents(listener);
+    }
+
+    @Override
+    public boolean triggerEvent(AudioEvent event) {
+        return manager.triggerEvent(event);
+    }
+
+    @Override
+    public void playEffect(AudioEffect effect) {
+        manager.playEffect(effect);
+    }
+
+    @Override
+    public void playSequence(AudioSequence sequence) {
+        manager.playSequence(sequence);
     }
 
     @Override
