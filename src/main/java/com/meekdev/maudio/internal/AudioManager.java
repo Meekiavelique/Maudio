@@ -521,7 +521,7 @@ public class AudioManager implements Maudio {
         if (player == null || !player.isOnline()) return;
 
         for (SoundCategory category : SoundCategory.values()) {
-            player.stopSound(category);
+            player.stopSound(String.valueOf(category));
         }
 
         getSoundsByPlayer(player).forEach(sound -> {
