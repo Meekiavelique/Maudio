@@ -3,6 +3,7 @@ package com.meekdev.maudio.internal;
 import com.meekdev.maudio.Maudio;
 import com.meekdev.maudio.SoundInstance;
 import com.meekdev.maudio.ZoneInstance;
+import com.meekdev.maudio.api.SoundLookup;
 import com.meekdev.maudio.api.effects.AudioEffect;
 import com.meekdev.maudio.api.effects.AudioSequence;
 import com.meekdev.maudio.api.events.AudioEvent;
@@ -313,6 +314,45 @@ public class AudioManager implements Maudio {
         player.stopSound(customSound, category);
     }
 
+    public void playSound(Location location, SoundLookup soundLookup) {
+        if (soundLookup == null) return;
+        playSound(location, soundLookup.getSound(), soundLookup.getCategory(),
+                soundLookup.getVolume(), soundLookup.getPitch());
+    }
+
+    public void playSoundToPlayer(Player player, SoundLookup soundLookup) {
+        if (soundLookup == null || player == null) return;
+        playSoundToPlayer(player, soundLookup.getSound(), soundLookup.getCategory(),
+                soundLookup.getVolume(), soundLookup.getPitch());
+    }
+
+    public SoundInstance playMusic(Player player, SoundLookup soundLookup) {
+        if (soundLookup == null || player == null) return null;
+        return playMusic(player, soundLookup.getSound(), soundLookup.getVolume(),
+                soundLookup.getPitch(), soundLookup.getFadeIn());
+    }
+
+    public SoundInstance playLoopingSound(Location location, SoundLookup soundLookup) {
+        if (soundLookup == null || location == null) return null;
+        return playLoopingSound(location, soundLookup.getSound(), soundLookup.getCategory(),
+                soundLookup.getVolume(), soundLookup.getPitch(),
+                soundLookup.isLooping() ? soundLookup.getLoopInterval() : 20);
+    }
+
+    public SoundInstance playLoopingSound(Player player, SoundLookup soundLookup) {
+        if (soundLookup == null || player == null) return null;
+        return playLoopingSound(player, soundLookup.getSound(), soundLookup.getCategory(),
+                soundLookup.getVolume(), soundLookup.getPitch(),
+                soundLookup.isLooping() ? soundLookup.getLoopInterval() : 20);
+    }
+
+    public ZoneInstance createSoundZone(Location center, double radius, SoundLookup soundLookup) {
+        if (soundLookup == null || center == null) return null;
+        return createSoundZone(center, radius, soundLookup.getSound(), soundLookup.getCategory(),
+                soundLookup.getVolume(), soundLookup.getPitch(),
+                soundLookup.isLooping() ? soundLookup.getLoopInterval() : 40);
+    }
+
     @Override
     public SoundInstance playMusic(Player player, Sound music, float volume, float pitch, float fadeInSeconds) {
         if (player == null || !player.isOnline()) {
@@ -561,28 +601,28 @@ public class AudioManager implements Maudio {
                 });
     }
 
-    float calculateVolume(float baseVolume) {
+    public float calculateVolume(float baseVolume) {
         return baseVolume * globalVolume;
     }
 
-    float calculatePlayerVolume(Player player, float baseVolume) {
+    public float calculatePlayerVolume(Player player, float baseVolume) {
         if (player == null) return 0;
         return baseVolume * globalVolume * playerVolumes.getOrDefault(player.getUniqueId(), 1.0f);
     }
 
-    Set<SoundInstanceImpl> getAllSounds() {
+    public Set<SoundInstanceImpl> getAllSounds() {
         return Set.copyOf(activeSounds.values());
     }
 
-    Set<ZoneInstanceImpl> getAllZones() {
+    public Set<ZoneInstanceImpl> getAllZones() {
         return Set.copyOf(activeZones.values());
     }
 
-    JavaPlugin getPlugin() {
+    public JavaPlugin getPlugin() {
         return plugin;
     }
 
-    void removeSoundInstance(UUID soundId) {
+    public void removeSoundInstance(UUID soundId) {
         SoundInstanceImpl instance = activeSounds.remove(soundId);
         if (instance != null) {
             soundPool.release(instance);
