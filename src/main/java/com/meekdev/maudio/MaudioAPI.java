@@ -103,22 +103,70 @@ public class MaudioAPI implements Maudio {
 
     @Override
     public SoundInstance playMusic(Player player, SoundLookup soundLookup) {
-        return null;
+        if (soundLookup == null || player == null) return null;
+        
+        if (soundLookup.hasCustomSound()) {
+            return playMusic(player, soundLookup.getCustomSound(), 
+                soundLookup.getVolume(), soundLookup.getPitch(), soundLookup.getFadeIn());
+        } else {
+            return playMusic(player, soundLookup.getSound(), 
+                soundLookup.getVolume(), soundLookup.getPitch(), soundLookup.getFadeIn());
+        }
     }
 
     @Override
     public SoundInstance playLoopingSound(Location location, SoundLookup soundLookup) {
-        return null;
+        if (soundLookup == null || location == null) return null;
+        
+        return playLoopingSound(
+            location, 
+            soundLookup.getSound(), 
+            soundLookup.getCategory(), 
+            soundLookup.getVolume(), 
+            soundLookup.getPitch(), 
+            soundLookup.isLooping() ? soundLookup.getLoopInterval() : 20
+        );
     }
 
     @Override
     public SoundInstance playLoopingSound(Player player, SoundLookup soundLookup) {
-        return null;
+        if (soundLookup == null || player == null) return null;
+        
+        return playLoopingSound(
+            player, 
+            soundLookup.getSound(), 
+            soundLookup.getCategory(), 
+            soundLookup.getVolume(), 
+            soundLookup.getPitch(), 
+            soundLookup.isLooping() ? soundLookup.getLoopInterval() : 20
+        );
     }
 
     @Override
     public ZoneInstance createSoundZone(Location center, double radius, SoundLookup soundLookup) {
-        return null;
+        if (soundLookup == null || center == null) return null;
+        
+        if (soundLookup.hasCustomSound()) {
+            return createSoundZone(
+                center, 
+                radius, 
+                soundLookup.getCustomSound(), 
+                soundLookup.getCategory(), 
+                soundLookup.getVolume(), 
+                soundLookup.getPitch(), 
+                soundLookup.isLooping() ? soundLookup.getLoopInterval() : 40
+            );
+        } else {
+            return createSoundZone(
+                center, 
+                radius, 
+                soundLookup.getSound(), 
+                soundLookup.getCategory(), 
+                soundLookup.getVolume(), 
+                soundLookup.getPitch(), 
+                soundLookup.isLooping() ? soundLookup.getLoopInterval() : 40
+            );
+        }
     }
 
     @Override
