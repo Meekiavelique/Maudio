@@ -8,7 +8,7 @@
 
 - **Location-based Sound Systems**: Play sounds at specific locations
 - **Player-targeted Audio**: Send sounds directly to specific players
-- **Music Management**: Seamlessly play and control background music with fade effects
+- **Music Management**: Seamlessly play and control background music with fade effects (Dosen't work due to changing volume of sound restart it)
 - **Looping Sounds**: Create ambient and repeating audio experiences
 - **Sound Zones**: Define areas that play sounds to players who enter them
 - **Volume Control**: Manage global and per-player volume settings
@@ -106,9 +106,11 @@ audioManager.playSound(location, "mycustom.sound.effect", SoundCategory.AMBIENT,
 // Play music with a 3-second fade-in
 SoundInstance music = audioManager.playMusic(player, Sound.MUSIC_DISC_CAT, 0.5f, 1.0f, 3.0f);
 
+
 // Later, stop the music with a 2-second fade-out
 audioManager.stopMusic(player, 2.0f);
 ```
+(Dosen't work due to changing volume of sound restart it)
 
 #### Looping Sounds
 
@@ -204,12 +206,13 @@ AudioEffect thunderEffect = new AudioEffect.Builder()
     .volume(1.0f)
     .pitch(0.8f)
     .global()  // Heard by all players
-    .fadeIn(0.5f)
+    .fadeIn(0.5f) // (Dosen't work due to changing volume of sound restart it)
     .build();
 
 // Play the effect
 audioManager.playEffect(thunderEffect);
 ```
+
 
 #### Audio Sequences
 
